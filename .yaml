@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: backend-residentes
+    env: node
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm run start:prod"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL
+        value: true
+    postDeploy:
+      - npm run typeorm migration:run
