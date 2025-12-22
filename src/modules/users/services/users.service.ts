@@ -77,10 +77,16 @@ export class UsersService {
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.findByEmail(email);
-    if (user && await bcrypt.compare(password, user.password)) {
-      await this.usersRepository.updateLastLogin(user.id);
-      return user;
+    
+    // Verificar que el usuario exista Y que tenga contraseña (no sea null)
+    if (user && user.password) {
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (isPasswordValid) {
+        await this.usersRepository.updateLastLogin(user.id);
+        return user;
+      }
     }
+    
     return null;
   }
 }
