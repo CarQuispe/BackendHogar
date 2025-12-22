@@ -1,5 +1,11 @@
 // src/modules/users/entities/user.entity.ts
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum UserRole {
@@ -16,9 +22,10 @@ export class User {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   id: string;
 
-  @Column({ type: 'varchar', length: 100 })
-  @ApiProperty({ example: 'María González' })
-  name: string;
+  // ✅ CAMBIO CLAVE AQUÍ
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  @ApiProperty({ example: 'María González', required: false })
+  name: string | null;
 
   @Column({ type: 'varchar', length: 100, unique: true })
   @ApiProperty({ example: 'maria@residencias.com' })
@@ -27,10 +34,10 @@ export class User {
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
-  @Column({ 
+  @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.VOLUNTARIO
+    default: UserRole.VOLUNTARIO,
   })
   @ApiProperty({ enum: UserRole, example: UserRole.DIRECTORA })
   role: UserRole;
