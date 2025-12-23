@@ -8,17 +8,32 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Configuración CORS para React
+  /**
+   * ===============================
+   * CONFIGURACIÓN CORS (SAFE)
+   * ===============================
+   */
+  const corsOrigins =
+    configService.get<string>('CORS_ORIGINS')?.split(',') ?? ['*'];
+
   app.enableCors({
-    origin: configService.get('CORS_ORIGINS').split(','),
+    origin: corsOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
-  // Prefijo global
+  /**
+   * ===============================
+   * PREFIJO GLOBAL API
+   * ===============================
+   */
   app.setGlobalPrefix(configService.get('API_PREFIX') || 'api');
 
-  // Validación global
+  /**
+   * ===============================
+   * VALIDACIÓN GLOBAL
+   * ===============================
+   */
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -27,21 +42,31 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger Documentación
-  const config = new DocumentBuilder()
+  /**
+   * ===============================
+   * SWAGGER DOCUMENTATION
+   * ===============================
+   */
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('Sistema de Gestión de Residentes API')
-    .setDescription('API para el sistema de gestión de residencias')
+    .setDescription('API para el sistema de gestión del Hogar de Niños')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  
-  const document = SwaggerModule.createDocument(app, config);
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
-  // Iniciar servidor
-  const port = configService.get('PORT') || 3000;
+  /**
+   * ===============================
+   * START SERVER
+   * ===============================
+   */
+  const port = configService.get<number>('PORT') || 3000;
   await app.listen(port);
-  console.log(`🚀 Aplicación corriendo en: http://localhost:${port}`);
-  console.log(`📚 Documentación Swagger en: http://localhost:${port}/api/docs`);
+
+  console.log(`🚀 Backend corriendo en puerto ${port}`);
+  console.log(`📚 Swagger: /api/docs`);
 }
+
 bootstrap();
