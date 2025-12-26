@@ -1,3 +1,4 @@
+// apps/backend/src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -10,28 +11,34 @@ async function bootstrap() {
 
   /**
    * ===============================
-   * CONFIGURACIÓN CORS (SAFE)
+   * CORS CONFIG (RENDER + REACT SAFE)
    * ===============================
    */
   const corsOrigins =
-    configService.get<string>('CORS_ORIGINS')?.split(',') ?? ['*'];
+    configService.get<string>('CORS_ORIGINS')?.split(',') || [];
 
   app.enableCors({
-    origin: corsOrigins,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: (origin, callback) => {
+      if (!origin || corsOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS bloqueado: ${origin}`));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
   /**
    * ===============================
-   * PREFIJO GLOBAL API
+   * GLOBAL PREFIX
    * ===============================
    */
   app.setGlobalPrefix(configService.get('API_PREFIX') || 'api');
 
   /**
    * ===============================
-   * VALIDACIÓN GLOBAL
+   * VALIDATION
    * ===============================
    */
   app.useGlobalPipes(
@@ -44,12 +51,12 @@ async function bootstrap() {
 
   /**
    * ===============================
-   * SWAGGER DOCUMENTATION
+   * SWAGGER
    * ===============================
    */
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Sistema de Gestión de Residentes API')
-    .setDescription('API para el sistema de gestión del Hogar de Niños')
+    .setDescription('API para el sistema del Hogar de Niños')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -66,7 +73,7 @@ async function bootstrap() {
   await app.listen(port);
 
   console.log(`🚀 Backend corriendo en puerto ${port}`);
-  console.log(`📚 Swagger: /api/docs`);
+  console.log(`🌍 CORS habilitado para: ${corsOrigins.join(', ')}`);
 }
 
 bootstrap();
