@@ -11,22 +11,29 @@ async function bootstrap() {
 
   /**
    * ===============================
-   * CORS CONFIG (RENDER + REACT SAFE)
+   * CORS CONFIG (FIX DEFINITIVO)
    * ===============================
    */
   const corsOrigins =
-    configService.get<string>('CORS_ORIGINS')?.split(',') || [];
+    configService.get<string>('CORS_ORIGINS')?.split(',') ?? [];
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || corsOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS bloqueado: ${origin}`));
+      // Permitir llamadas sin origin (Postman, curl, health checks)
+      if (!origin) {
+        return callback(null, true);
       }
+
+      if (corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.error('❌ CORS bloqueado para:', origin);
+      return callback(null, false); // ⬅️ IMPORTANTE (NO lanzar error)
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
   });
 
   /**
@@ -72,8 +79,8 @@ async function bootstrap() {
   const port = configService.get<number>('PORT') || 3000;
   await app.listen(port);
 
-  console.log(`🚀 Backend corriendo en puerto ${port}`);
-  console.log(`🌍 CORS habilitado para: ${corsOrigins.join(', ')}`);
+  console.log(` Backend corriendo en puerto ${port}`);
+  console.log(` CORS habilitado para:`, corsOrigins);
 }
 
 bootstrap();
